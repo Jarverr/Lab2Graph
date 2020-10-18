@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -8,6 +8,12 @@
   <ItemGroup>
     <PackageReference Include="GraphViz4Net" Version="3.0.2" />
     <PackageReference Include="QuickGraph" Version="3.6.61119.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="DotFileParser">
+      <HintPath>..\..\..\DotFileParser\DotFileParser\bin\Debug\netcoreapp3.1\DotFileParser.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

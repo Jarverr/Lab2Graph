@@ -18,3 +18,5 @@ F:\PULPIR\Grafy\Lab2\Zad2Graph\Zad2Graph\bin\Debug\netcoreapp3.1\QuickGraph.dll
 F:\PULPIR\Grafy\Lab2\Zad2Graph\Zad2Graph\bin\Debug\netcoreapp3.1\Antlr3.Runtime.dll
 F:\PULPIR\Grafy\Lab2\Zad2Graph\Zad2Graph\bin\Debug\netcoreapp3.1\Graphviz4Net.dll
 F:\PULPIR\Grafy\Lab2\Zad2Graph\Zad2Graph\obj\Debug\netcoreapp3.1\Zad2Graph.csproj.CoreCompileInputs.cache
+F:\PULPIR\Grafy\Lab2\Zad2Graph\Zad2Graph\bin\Debug\netcoreapp3.1\DotFileParser.dll
+F:\PULPIR\Grafy\Lab2\Zad2Graph\Zad2Graph\bin\Debug\netcoreapp3.1\DotFileParser.pdb

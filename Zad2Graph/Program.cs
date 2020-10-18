@@ -3,6 +3,7 @@ using Graphviz4Net.Dot;
 using Graphviz4Net.Dot.AntlrParser;
 using Graphviz4Net.Graphs;
 //using QuickGraph;
+using DotFileParser;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -22,23 +23,27 @@ namespace Zad2Graph
 
                 //args[0] = "GraphToTest.dt";
                 using var sr = new StreamReader(args[0]);
-                sw.Start();
                 //AdjacencyGraph<string, Edge<string>> graph = new AdjacencyGraph<string, Edge<string>>(true);
-                
+                ParserClass pc = new ParserClass();
+                Tuple<List<int>, int[][], Dictionary<int, List<int>>, Dictionary<int, int>, Dictionary<int, int>> tuple = pc.ParseFile(args[0]);
                 int counter = 0;
+                sw.Start();
+
                 //Console.WriteLine(sr.ReadToEnd());
-                var graph = Parse(sr.ReadToEnd());
+                //var graph = Parse(sr.ReadToEnd());
                 //Console.WriteLine(graph+"\n\n");
-                List<int> vertices = new List<int>();
+                List<int> vertices = tuple.Item1;
+                int[][] edges = tuple.Item2;
                 //Dictionary<List<int>,List<int>> edgesConnection= new Dictionary<List<int>, List<int>>();
-                Dictionary<int, int> edgesSource = new Dictionary<int, int>();
-                Dictionary<int, int> edgesDestination = new Dictionary<int, int>();
-                Dictionary<int, List<int>> edgesConnection = new Dictionary<int, List<int>>();           
+                Dictionary<int, int> edgesSource =tuple.Item4;
+                Dictionary<int, int> edgesDestination = tuple.Item5;
+                Dictionary<int, List<int>> edgesConnection = tuple.Item3;           
                 Dictionary<int, bool> potentialCapital = new Dictionary<int, bool>();
 
-                GetInfoAboutGraph(graph, edgesConnection, edgesSource, edgesDestination, vertices);
+                //GetInfoAboutGraph(graph, edgesConnection, edgesSource, edgesDestination, vertices);
                 sw.Start();
-                CheckAllVerticiesIsAbleToReach(graph, vertices, edgesSource, edgesConnection, edgesDestination,potentialCapital);
+                potentialCapital= BFSAlgorithm(vertices, edgesSource, edgesDestination, edgesConnection, edges, potentialCapital);
+                //CheckAllVerticiesIsAbleToReach( vertices, edgesSource, edgesConnection, edgesDestination,potentialCapital);
                 sw.Stop();
                 Console.WriteLine("Time speneded on duty: {0} seconds",sw.Elapsed.TotalSeconds);
                 Console.WriteLine("Looked vericies:");
@@ -47,16 +52,71 @@ namespace Zad2Graph
                     if(item.Value==true)
                         Console.Write(item.Key+" ");
                 }
+                if (!potentialCapital.Values.Contains(true))
+                {
+                    Console.WriteLine("Nie znaleziono wierzchołka");
+                }
             }
         }
 
-        private static void CheckAllVerticiesIsAbleToReach(DotGraph<int> graph, List<int> vertices, Dictionary<int, int> edgesSource, Dictionary<int, List<int>> edgesConnection, Dictionary<int, int> edgesDestination, Dictionary<int, bool> potentialCapital)
+        private static Dictionary<int, bool> BFSAlgorithm(List<int> vertices, Dictionary<int, int> edgesSource, Dictionary<int, int> edgesDestination, Dictionary<int, List<int>> edgesConnection, int[][] edges, Dictionary<int, bool> potentialCapital)
+        {
+            Queue<int> verteciesToCheck = new Queue<int>();
+            Dictionary<int, bool> verteciesWhichImAbletAchive = new Dictionary<int, bool>();
+            int vertexWchichICheck;
+            //uzupełnieni słowników
+            foreach (var item in vertices)
+            {
+                verteciesWhichImAbletAchive.Add(item, false);
+            }
+            int counter;
+            foreach (var item in vertices)
+            {
+                counter = 0;
+                verteciesToCheck.Clear();
+                foreach (var itemToClear in vertices)
+                {
+                    verteciesWhichImAbletAchive[itemToClear] = false;
+                }
+                verteciesWhichImAbletAchive[item] = true;
+                verteciesToCheck.Enqueue(item);
+                while (verteciesToCheck.Count>0)
+                {
+                    vertexWchichICheck = verteciesToCheck.Dequeue();
+                    for (int i = 0; i < vertices.Count; i++)
+                    {
+                        if (edgesConnection[i].Contains(vertexWchichICheck)&&!verteciesWhichImAbletAchive[i])
+                        {
+                            verteciesWhichImAbletAchive[i] = true;
+                            verteciesToCheck.Enqueue(i);
+                        }
+                    }
+                }
+                for (int i = 0; i < vertices.Count; i++)
+                {
+                    if (verteciesWhichImAbletAchive[i] == true)
+                        counter++;
+                }
+                if (counter==vertices.Count)
+                {
+                    potentialCapital.Add(item, true);
+                }
+                else
+                {
+                    potentialCapital.Add(item, false);
+                }
+            }
+            return potentialCapital;
+        }
+
+        private static void CheckAllVerticiesIsAbleToReach(List<int> vertices, Dictionary<int, int> edgesSource, Dictionary<int, List<int>> edgesConnection, Dictionary<int, int> edgesDestination, Dictionary<int, bool> potentialCapital)
         {
             Dictionary<int, bool> vertexToCheck = new Dictionary<int, bool>();
             List<int> isReached= new List<int>();
             List<int> isNotReached = new List<int>();
 
-            //bede sprawdzał wszystkie wierzchołki po kolei w tej petli czy sa osiagalne z kazdego miejsca grafu
+
+            //bede sprawdzał wszystkie wierzchołki po kolei w tej petli czy sa osiagalne z kazdego miejsca grafu v1
             foreach (var item in vertices)
             {
                 SetVertexToCheckAndUnreached(vertexToCheck, isNotReached, vertices);
