@@ -10,6 +10,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Zad2Graph
 {
@@ -25,8 +26,7 @@ namespace Zad2Graph
                 using var sr = new StreamReader(args[0]);
                 //AdjacencyGraph<string, Edge<string>> graph = new AdjacencyGraph<string, Edge<string>>(true);
                 ParserClass pc = new ParserClass();
-                Tuple<List<int>, int[][], Dictionary<int, List<int>>, Dictionary<int, int>, Dictionary<int, int>> tuple = pc.ParseFile(args[0]);
-                int counter = 0;
+                Tuple<List<int>, int[][], Dictionary<int, List<int>>, Dictionary<int, int>, Dictionary<int, int>, Dictionary<int, List<int>>> tuple = pc.ParseFile(args[0]);
                 sw.Start();
 
                 //Console.WriteLine(sr.ReadToEnd());
@@ -37,12 +37,14 @@ namespace Zad2Graph
                 //Dictionary<List<int>,List<int>> edgesConnection= new Dictionary<List<int>, List<int>>();
                 Dictionary<int, int> edgesSource =tuple.Item4;
                 Dictionary<int, int> edgesDestination = tuple.Item5;
-                Dictionary<int, List<int>> edgesConnection = tuple.Item3;           
+                Dictionary<int, List<int>> edgesConnectionFromMe = tuple.Item3;           
+                Dictionary<int, List<int>> edgesConnectionToMe = tuple.Item6;           
                 Dictionary<int, bool> potentialCapital = new Dictionary<int, bool>();
 
                 //GetInfoAboutGraph(graph, edgesConnection, edgesSource, edgesDestination, vertices);
                 sw.Start();
-                potentialCapital= BFSAlgorithm(vertices, edgesSource, edgesDestination, edgesConnection, edges, potentialCapital);
+                Console.WriteLine("Program has been started");
+                BFSAlgorithm(vertices, edgesSource, edgesDestination, edgesConnectionToMe, edges, potentialCapital);
                 //CheckAllVerticiesIsAbleToReach( vertices, edgesSource, edgesConnection, edgesDestination,potentialCapital);
                 sw.Stop();
                 Console.WriteLine("Time speneded on duty: {0} seconds",sw.Elapsed.TotalSeconds);
@@ -52,61 +54,66 @@ namespace Zad2Graph
                     if(item.Value==true)
                         Console.Write(item.Key+" ");
                 }
+                Console.WriteLine("\nVerticies which are out of rim:");
+                foreach (var item in potentialCapital)
+                {
+                    if(item.Value==false)
+                        Console.Write(item.Key+" ");
+                }
                 if (!potentialCapital.Values.Contains(true))
                 {
-                    Console.WriteLine("Nie znaleziono wierzchołka");
+                    Console.WriteLine("I didn't find any vertecies");
                 }
             }
         }
 
-        private static Dictionary<int, bool> BFSAlgorithm(List<int> vertices, Dictionary<int, int> edgesSource, Dictionary<int, int> edgesDestination, Dictionary<int, List<int>> edgesConnection, int[][] edges, Dictionary<int, bool> potentialCapital)
+        private async static void BFSAlgorithm(List<int> vertices, Dictionary<int, int> edgesSource, Dictionary<int, int> edgesDestination, Dictionary<int, List<int>> edgesConnection, int[][] edges, Dictionary<int, bool> potentialCapital)
+        {
+            
+            //uzupełnieni słowników
+            
+            
+            List<Task> tasks = new List<Task>();
+
+            foreach (var item in vertices)
+            {
+                tasks.Add(checkVertex(item,vertices, edgesConnection, potentialCapital));
+            }
+            await Task.WhenAll(tasks);
+            //return potentialCapital;
+        }
+
+        private async static Task checkVertex(int vertex, List<int> vertices, Dictionary<int, List<int>> edgesConnection, Dictionary<int, bool> potentialCapital)
         {
             Queue<int> verteciesToCheck = new Queue<int>();
-            Dictionary<int, bool> verteciesWhichImAbletAchive = new Dictionary<int, bool>();
-            int vertexWchichICheck;
-            //uzupełnieni słowników
-            foreach (var item in vertices)
+            bool[] visited = new bool[vertices.Count];
+            List<int> amountOfVisitedVertesies = new List<int>();
+            verteciesToCheck.Clear();
+
+            visited[vertex] = true;
+            verteciesToCheck.Enqueue(vertex);
+            while (verteciesToCheck.Count > 0)
             {
-                verteciesWhichImAbletAchive.Add(item, false);
-            }
-            int counter;
-            foreach (var item in vertices)
-            {
-                counter = 0;
-                verteciesToCheck.Clear();
-                foreach (var itemToClear in vertices)
+                amountOfVisitedVertesies.Add( verteciesToCheck.Dequeue());
+                List<int> neighbours = edgesConnection[amountOfVisitedVertesies.Last()];
+                for (int i = 0; i < neighbours.Count; i++)
                 {
-                    verteciesWhichImAbletAchive[itemToClear] = false;
-                }
-                verteciesWhichImAbletAchive[item] = true;
-                verteciesToCheck.Enqueue(item);
-                while (verteciesToCheck.Count>0)
-                {
-                    vertexWchichICheck = verteciesToCheck.Dequeue();
-                    for (int i = 0; i < vertices.Count; i++)
+                    if (!visited[neighbours[i]])
                     {
-                        if (edgesConnection[i].Contains(vertexWchichICheck)&&!verteciesWhichImAbletAchive[i])
-                        {
-                            verteciesWhichImAbletAchive[i] = true;
-                            verteciesToCheck.Enqueue(i);
-                        }
+                        visited[neighbours[i]] = true;
+                        verteciesToCheck.Enqueue(neighbours[i]);
                     }
                 }
-                for (int i = 0; i < vertices.Count; i++)
-                {
-                    if (verteciesWhichImAbletAchive[i] == true)
-                        counter++;
-                }
-                if (counter==vertices.Count)
-                {
-                    potentialCapital.Add(item, true);
-                }
-                else
-                {
-                    potentialCapital.Add(item, false);
-                }
             }
-            return potentialCapital;
+
+            if (amountOfVisitedVertesies.Count == vertices.Count)
+            {
+                potentialCapital.Add(vertex, true);
+            }
+            else
+            {
+                potentialCapital.Add(vertex, false);
+            }
         }
 
         private static void CheckAllVerticiesIsAbleToReach(List<int> vertices, Dictionary<int, int> edgesSource, Dictionary<int, List<int>> edgesConnection, Dictionary<int, int> edgesDestination, Dictionary<int, bool> potentialCapital)

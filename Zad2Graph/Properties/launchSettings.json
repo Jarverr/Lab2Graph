@@ -1,8 +1,7 @@
 {
   "profiles": {
     "Zad2Graph": {
-      "commandName": "Project",
-      "commandLineArgs": "sredni.dt"
+      "commandName": "Project"
     }
   }
 }
